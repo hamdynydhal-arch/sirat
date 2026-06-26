@@ -1,5 +1,5 @@
 import { useLocalStorage } from './useLocalStorage';
-import { DailyRecord, PRAYERS_LIST, HABITS_LIST } from '../types';
+import { type DailyRecord, PRAYERS_LIST, HABITS_LIST } from '../types';
 
 function getTodayDate(): string {
   return new Date().toISOString().split('T')[0];
