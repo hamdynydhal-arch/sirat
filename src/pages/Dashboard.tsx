@@ -14,27 +14,12 @@ function getTodayArabic(): string {
   return `${days[now.getDay()]}، ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
 }
 
-const S = {
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    padding: '1.5rem',
-    boxShadow: '0 1px 4px rgba(17,28,23,0.08)',
-    border: '1px solid #EAE3D3',
-  } as React.CSSProperties,
-  label: {
-    fontFamily: 'Tajawal, sans-serif',
-    fontSize: '13px',
-    color: '#6B8F7E',
-    marginBottom: '0.25rem',
-  } as React.CSSProperties,
-  value: {
-    fontFamily: 'El Messiri, sans-serif',
-    fontSize: '2.5rem',
-    fontWeight: 700,
-    color: '#2C5346',
-    lineHeight: 1,
-  } as React.CSSProperties,
+const card: React.CSSProperties = {
+  backgroundColor: '#fff',
+  borderRadius: '12px',
+  padding: '1.25rem',
+  boxShadow: '0 1px 4px rgba(17,28,23,0.08)',
+  border: '1px solid #EAE3D3',
 };
 
 export default function Dashboard() {
@@ -57,94 +42,70 @@ export default function Dashboard() {
   const quote = quotes[new Date().getDay() % quotes.length];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Date header */}
       <div>
-        <h1 style={{ fontFamily: 'El Messiri, sans-serif', fontSize: '1.75rem', color: '#111C17', margin: 0, marginBottom: '0.25rem' }}>
+        <h1 style={{ fontFamily: 'El Messiri, sans-serif', fontSize: '1.5rem', color: '#111C17', margin: 0, marginBottom: '0.2rem' }}>
           لوحة التحكم
         </h1>
-        <p style={{ fontFamily: 'Tajawal, sans-serif', color: '#6B8F7E', margin: 0 }}>{getTodayArabic()}</p>
+        <p style={{ fontFamily: 'Tajawal, sans-serif', color: '#6B8F7E', margin: 0, fontSize: '14px' }}>{getTodayArabic()}</p>
       </div>
 
       {/* Quote */}
       <div style={{
         background: 'linear-gradient(135deg, #2C5346 0%, #1E3B30 100%)',
-        borderRadius: '16px',
-        padding: '2rem',
+        borderRadius: '14px',
+        padding: '1.25rem',
         color: '#F5F0E6',
         position: 'relative',
         overflow: 'hidden',
       }}>
-        <div style={{
-          position: 'absolute', top: '-20px', left: '-20px',
-          width: '100px', height: '100px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(196,154,82,0.1)',
-        }}></div>
-        <div style={{
-          position: 'absolute', bottom: '-30px', right: '-10px',
-          width: '120px', height: '120px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(196,154,82,0.08)',
-        }}></div>
+        <div style={{ position: 'absolute', top: '-20px', left: '-20px', width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(196,154,82,0.1)' }} />
+        <div style={{ position: 'absolute', bottom: '-20px', right: '-10px', width: '90px', height: '90px', borderRadius: '50%', backgroundColor: 'rgba(196,154,82,0.08)' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ color: '#C49A52', marginBottom: '0.75rem', fontSize: '20px' }}>✦</div>
-          <p style={{
-            fontFamily: 'El Messiri, sans-serif',
-            fontSize: '1.25rem',
-            lineHeight: 1.8,
-            color: '#F5F0E6',
-            margin: '0 0 0.75rem 0',
-          }}>{quote.text}</p>
-          <p style={{ fontFamily: 'Tajawal, sans-serif', fontSize: '13px', color: '#C49A52', margin: 0 }}>{quote.source}</p>
+          <div style={{ color: '#C49A52', marginBottom: '0.5rem', fontSize: '18px' }}>✦</div>
+          <p style={{ fontFamily: 'El Messiri, sans-serif', fontSize: '1.1rem', lineHeight: 1.8, color: '#F5F0E6', margin: '0 0 0.5rem 0' }}>
+            {quote.text}
+          </p>
+          <p style={{ fontFamily: 'Tajawal, sans-serif', fontSize: '12px', color: '#C49A52', margin: 0 }}>{quote.source}</p>
         </div>
       </div>
 
-      {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        <div style={S.card}>
-          <p style={S.label}>الصلوات اليوم</p>
-          <div style={S.value}>{prayersDone}<span style={{ fontSize: '1.25rem', color: '#6B8F7E' }}>/٥</span></div>
-          <div style={{ marginTop: '0.75rem', height: '4px', backgroundColor: '#EAE3D3', borderRadius: '2px' }}>
-            <div style={{ width: `${(prayersDone / 5) * 100}%`, height: '100%', backgroundColor: '#2C5346', borderRadius: '2px', transition: 'width 0.5s' }}></div>
+      {/* Stats grid — 2 cols mobile, 4 cols desktop */}
+      <div className="stat-grid">
+        {[
+          { label: 'الصلوات اليوم', value: prayersDone, suffix: '/٥', pct: (prayersDone / 5) * 100, color: '#2C5346' },
+          { label: 'العادات اليومية', value: habitsDone, suffix: '/٨', pct: (habitsDone / 8) * 100, color: '#C49A52' },
+          { label: 'إنجاز اليوم', value: donePct, suffix: '%', pct: donePct, color: '#3D6B5A', gradient: true },
+          { label: 'متوسط الأسبوع', value: weekAvg, suffix: '%', pct: weekAvg, color: '#3D6B5A' },
+        ].map(s => (
+          <div key={s.label} style={card}>
+            <p style={{ fontFamily: 'Tajawal, sans-serif', fontSize: '12px', color: '#6B8F7E', margin: '0 0 0.25rem 0' }}>{s.label}</p>
+            <div style={{ fontFamily: 'El Messiri, sans-serif', fontSize: '2rem', fontWeight: 700, color: s.color, lineHeight: 1 }}>
+              {s.value}<span style={{ fontSize: '1rem', color: '#6B8F7E' }}>{s.suffix}</span>
+            </div>
+            <div style={{ marginTop: '0.6rem', height: '4px', backgroundColor: '#EAE3D3', borderRadius: '2px' }}>
+              <div style={{
+                width: `${s.pct}%`, height: '100%', borderRadius: '2px', transition: 'width 0.5s',
+                background: s.gradient ? 'linear-gradient(90deg, #2C5346, #C49A52)' : s.color,
+              }} />
+            </div>
           </div>
-        </div>
-        <div style={S.card}>
-          <p style={S.label}>العادات اليومية</p>
-          <div style={S.value}>{habitsDone}<span style={{ fontSize: '1.25rem', color: '#6B8F7E' }}>/٨</span></div>
-          <div style={{ marginTop: '0.75rem', height: '4px', backgroundColor: '#EAE3D3', borderRadius: '2px' }}>
-            <div style={{ width: `${(habitsDone / 8) * 100}%`, height: '100%', backgroundColor: '#C49A52', borderRadius: '2px', transition: 'width 0.5s' }}></div>
-          </div>
-        </div>
-        <div style={S.card}>
-          <p style={S.label}>إنجاز اليوم</p>
-          <div style={S.value}>{donePct}<span style={{ fontSize: '1.25rem', color: '#6B8F7E' }}>%</span></div>
-          <div style={{ marginTop: '0.75rem', height: '4px', backgroundColor: '#EAE3D3', borderRadius: '2px' }}>
-            <div style={{ width: `${donePct}%`, height: '100%', background: 'linear-gradient(90deg, #2C5346, #C49A52)', borderRadius: '2px', transition: 'width 0.5s' }}></div>
-          </div>
-        </div>
-        <div style={S.card}>
-          <p style={S.label}>متوسط الأسبوع</p>
-          <div style={S.value}>{weekAvg}<span style={{ fontSize: '1.25rem', color: '#6B8F7E' }}>%</span></div>
-          <div style={{ marginTop: '0.75rem', height: '4px', backgroundColor: '#EAE3D3', borderRadius: '2px' }}>
-            <div style={{ width: `${weekAvg}%`, height: '100%', backgroundColor: '#3D6B5A', borderRadius: '2px', transition: 'width 0.5s' }}></div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Today progress */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <div style={S.card}>
-          <h3 style={{ fontFamily: 'El Messiri, sans-serif', color: '#2C5346', margin: '0 0 1rem 0', fontSize: '1.1rem' }}>الصلوات</h3>
+      {/* Today progress — 1 col mobile, 2 col desktop */}
+      <div className="two-col-grid">
+        <div style={card}>
+          <h3 style={{ fontFamily: 'El Messiri, sans-serif', color: '#2C5346', margin: '0 0 0.75rem 0', fontSize: '1rem' }}>الصلوات</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {todayRecord.prayers.map(prayer => (
               <div key={prayer.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div style={{
-                  width: '20px', height: '20px', borderRadius: '50%',
+                  width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
                   backgroundColor: prayer.done ? '#2C5346' : '#EAE3D3',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'background-color 0.2s',
-                  flexShrink: 0,
                 }}>
                   {prayer.done && <span style={{ color: '#F5F0E6', fontSize: '11px' }}>✓</span>}
                 </div>
@@ -155,17 +116,16 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-        <div style={S.card}>
-          <h3 style={{ fontFamily: 'El Messiri, sans-serif', color: '#2C5346', margin: '0 0 1rem 0', fontSize: '1.1rem' }}>العادات اليومية</h3>
+        <div style={card}>
+          <h3 style={{ fontFamily: 'El Messiri, sans-serif', color: '#2C5346', margin: '0 0 0.75rem 0', fontSize: '1rem' }}>العادات اليومية</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {todayRecord.habits.map(habit => (
               <div key={habit.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div style={{
-                  width: '20px', height: '20px', borderRadius: '4px',
+                  width: '20px', height: '20px', borderRadius: '4px', flexShrink: 0,
                   backgroundColor: habit.done ? '#C49A52' : '#EAE3D3',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'background-color 0.2s',
-                  flexShrink: 0,
                 }}>
                   {habit.done && <span style={{ color: '#fff', fontSize: '11px' }}>✓</span>}
                 </div>

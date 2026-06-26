@@ -71,3 +71,113 @@ h1, h2, h3, h4, h5, h6 {
   background: #2C5346;
   border-radius: 2px;
 }
+
+/* Responsive grid helpers */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .stat-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .two-col-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.three-col-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 480px) {
+  .three-col-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 768px) {
+  .three-col-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.prayers-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+
+.habits-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+@media (min-width: 540px) {
+  .habits-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Chart wrapper — allows horizontal scroll on small screens */
+.chart-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chart-inner {
+  min-width: 280px;
+}
+
+/* Hide scrollbar for nav */
+.nav-scroll {
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile nav menu */
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 64px;
+  right: 0;
+  left: 0;
+  background: #1E3B30;
+  z-index: 100;
+  padding: 0.5rem 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.mobile-menu.open {
+  display: block;
+}
+@media (min-width: 768px) {
+  .mobile-menu { display: none !important; }
+  .hamburger-btn { display: none !important; }
+  .desktop-nav { display: flex !important; }
+}
+.desktop-nav {
+  display: none;
+}
+@media (min-width: 768px) {
+  .desktop-nav { display: flex; }
+}
+.hamburger-btn {
+  display: flex;
+}
+@media (min-width: 768px) {
+  .hamburger-btn { display: none; }
+}

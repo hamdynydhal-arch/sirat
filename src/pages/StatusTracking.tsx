@@ -157,8 +157,10 @@ export default function StatusTracking() {
         <h2 style={{ fontFamily: 'El Messiri, sans-serif', fontSize: '1.1rem', color: '#2C5346', margin: '0 0 1.25rem 0' }}>
           مسار الحالة (١٤ يوم)
         </h2>
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={last14} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+        <div className="chart-wrapper">
+        <div className="chart-inner">
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={last14} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#EAE3D3" />
             <XAxis dataKey="day" tick={{ fontFamily: 'Tajawal, sans-serif', fontSize: 11, fill: '#6B8F7E' }} />
             <YAxis domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontFamily: 'Tajawal, sans-serif', fontSize: 11, fill: '#6B8F7E' }} />
@@ -172,6 +174,8 @@ export default function StatusTracking() {
             <Line type="monotone" dataKey="focus" name="التركيز" stroke="#3D6B5A" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
           </LineChart>
         </ResponsiveContainer>
+        </div>
+        </div>
       </div>
 
       {/* Recent entries */}
