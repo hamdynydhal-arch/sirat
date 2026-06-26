@@ -5,6 +5,7 @@ import DailyRoutine from './pages/DailyRoutine'
 import PerformanceAnalysis from './pages/PerformanceAnalysis'
 import StatusTracking from './pages/StatusTracking'
 import Guidance from './pages/Guidance'
+import InstallPrompt from './components/InstallPrompt'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="guidance" element={<Guidance />} />
         </Route>
       </Routes>
+      <InstallPrompt />
     </HashRouter>
   )
 }

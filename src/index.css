@@ -72,6 +72,16 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 2px;
 }
 
+/* Install prompt animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
 /* Responsive grid helpers */
 .stat-grid {
   display: grid;
