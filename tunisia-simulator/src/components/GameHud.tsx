@@ -1,18 +1,24 @@
 "use client";
 
+import { useMemo } from "react";
 import { useGameStore } from "@/store/gameStore";
-import { formatGameDate, formatMillions } from "@/lib/format";
+import { computeMonthlyFinances } from "@/lib/economy";
+import { formatGameDate, formatMillions, formatNetFlow } from "@/lib/format";
 
 /** Top bar showing the global game state, plus the end-turn action. */
 export default function GameHud() {
   const gameState = useGameStore((state) => state.gameState);
+  const regions = useGameStore((state) => state.regions);
+  const activeProjects = useGameStore((state) => state.activeProjects);
+  const completedProjects = useGameStore((state) => state.completedProjects);
   const advanceTime = useGameStore((state) => state.advanceTime);
 
-  const stats = [
-    { label: "التاريخ", value: formatGameDate(gameState.currentDate) },
-    { label: "الميزانية العامة", value: formatMillions(gameState.totalBudget, "TND") },
-    { label: "العملة الصعبة", value: formatMillions(gameState.hardCurrency, "USD") },
-  ];
+  const { net } = useMemo(
+    () => computeMonthlyFinances(regions, activeProjects, completedProjects),
+    [regions, activeProjects, completedProjects],
+  );
+
+  const inDebt = gameState.totalBudget < 0;
 
   return (
     <header className="border-b border-slate-800 bg-slate-900/80 px-4 py-3 backdrop-blur">
@@ -20,14 +26,39 @@ export default function GameHud() {
         <h1 className="me-auto text-base font-semibold tracking-wide text-slate-100">
           محاكي تونس
         </h1>
-        {stats.map((stat) => (
-          <div key={stat.label} className="flex items-baseline gap-2">
-            <span className="text-xs text-slate-500">{stat.label}</span>
-            <span className="text-sm font-semibold tabular-nums text-slate-100">
-              {stat.value}
-            </span>
-          </div>
-        ))}
+        <div className="flex items-baseline gap-2">
+          <span className="text-xs text-slate-500">التاريخ</span>
+          <span className="text-sm font-semibold tabular-nums text-slate-100">
+            {formatGameDate(gameState.currentDate)}
+          </span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-xs text-slate-500">الميزانية العامة</span>
+          <span
+            className={`text-sm font-semibold tabular-nums ${
+              inDebt ? "text-red-400" : "text-slate-100"
+            }`}
+          >
+            {formatMillions(gameState.totalBudget, "TND")}
+          </span>
+          <span
+            dir="ltr"
+            title="صافي التدفق النقدي الشهري"
+            className={`rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${
+              net >= 0
+                ? "bg-emerald-500/10 text-emerald-400"
+                : "bg-red-500/10 text-red-400"
+            }`}
+          >
+            {formatNetFlow(net)}
+          </span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-xs text-slate-500">العملة الصعبة</span>
+          <span className="text-sm font-semibold tabular-nums text-slate-100">
+            {formatMillions(gameState.hardCurrency, "USD")}
+          </span>
+        </div>
         <button
           type="button"
           onClick={advanceTime}

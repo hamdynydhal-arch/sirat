@@ -8,6 +8,7 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
     costTND: 180,
     costUSD: 40,
     durationMonths: 18,
+    maintenanceCostTND: 5,
     effects: { infrastructureChange: 1 },
   },
   {
@@ -16,6 +17,7 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
     costTND: 450,
     costUSD: 120,
     durationMonths: 30,
+    maintenanceCostTND: 8,
     effects: { infrastructureChange: 2 },
   },
   {
@@ -24,6 +26,7 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
     costTND: 260,
     costUSD: 90,
     durationMonths: 24,
+    maintenanceCostTND: 6,
     effects: { infrastructureChange: 2 },
   },
   {
@@ -32,6 +35,7 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
     costTND: 320,
     costUSD: 150,
     durationMonths: 20,
+    maintenanceCostTND: 7,
     effects: { infrastructureChange: 1 },
   },
 ];

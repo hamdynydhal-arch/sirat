@@ -4,6 +4,9 @@ const LOCALE = "ar-TN";
 
 const numberFormat = new Intl.NumberFormat(LOCALE);
 
+// Money amounts accrue fractional tax income; display them as whole millions.
+const moneyFormat = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
+
 export function formatNumber(value: number): string {
   return numberFormat.format(value);
 }
@@ -11,7 +14,14 @@ export function formatNumber(value: number): string {
 /** Formats an amount given in millions, e.g. 5000 -> "5.000 مليون دينار". */
 export function formatMillions(value: number, currency: "TND" | "USD"): string {
   const unit = currency === "TND" ? "دينار" : "دولار";
-  return `${numberFormat.format(value)} مليون ${unit}`;
+  return `${moneyFormat.format(value)} مليون ${unit}`;
+}
+
+/** Signed compact cash flow in million TND, e.g. "+25م د.ت" or "-8م د.ت". */
+export function formatNetFlow(value: number): string {
+  const rounded = Math.round(value);
+  const sign = rounded < 0 ? "-" : "+";
+  return `${sign}${moneyFormat.format(Math.abs(rounded))}م د.ت`;
 }
 
 /** Arabic month-count phrase with correct grammatical number, e.g. "شهران". */

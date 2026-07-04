@@ -71,6 +71,8 @@ export interface ProjectTemplate {
   costUSD: number;
   /** Construction time in in-game months. */
   durationMonths: number;
+  /** Recurring upkeep in million TND per month once the project is completed. */
+  maintenanceCostTND: number;
   effects: ProjectEffects;
 }
 
@@ -82,4 +84,12 @@ export interface ActiveProject {
   projectId: string;
   regionId: RegionId;
   monthsRemaining: number;
+}
+
+/** A finished project; kept in state because it incurs monthly maintenance. */
+export interface CompletedProject {
+  instanceId: string;
+  /** References `ProjectTemplate.id`. */
+  projectId: string;
+  regionId: RegionId;
 }

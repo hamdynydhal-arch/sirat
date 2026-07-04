@@ -2,6 +2,7 @@
 
 import { useGameStore } from "@/store/gameStore";
 import { PROJECT_TEMPLATES, getProjectTemplate } from "@/data/projects";
+import { MAX_ACTIVE_PROJECTS_PER_REGION } from "@/lib/economy";
 import { formatMillions, formatMonths, formatNumber } from "@/lib/format";
 
 /**
@@ -25,6 +26,7 @@ export default function RegionSidebar() {
   const regionProjects = activeProjects.filter(
     (project) => project.regionId === region.id,
   );
+  const atCapacity = regionProjects.length >= MAX_ACTIVE_PROJECTS_PER_REGION;
 
   return (
     <aside
@@ -79,6 +81,11 @@ export default function RegionSidebar() {
 
       <section className="mt-8">
         <h3 className="text-sm font-semibold text-slate-300">المشاريع المتاحة</h3>
+        {atCapacity && (
+          <p className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-300">
+            الحد الأقصى للمشاريع النشطة ممتلئ
+          </p>
+        )}
         <ul className="mt-3 space-y-3">
           {PROJECT_TEMPLATES.map((template) => {
             const affordable =
@@ -96,9 +103,15 @@ export default function RegionSidebar() {
                   <button
                     type="button"
                     onClick={() => startProject(template.id, region.id)}
-                    disabled={!affordable}
+                    disabled={!affordable || atCapacity}
                     aria-label={`بناء ${template.name}`}
-                    title={affordable ? undefined : "الأموال غير كافية"}
+                    title={
+                      atCapacity
+                        ? "الحد الأقصى للمشاريع النشطة ممتلئ"
+                        : affordable
+                          ? undefined
+                          : "الأموال غير كافية"
+                    }
                     className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-bold text-white transition-colors hover:bg-emerald-500 active:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500"
                   >
                     بناء
@@ -112,6 +125,10 @@ export default function RegionSidebar() {
                 <p className="mt-1 text-xs text-slate-500">
                   المدة: {formatMonths(template.durationMonths)} · الأثر: بنية
                   تحتية +{template.effects.infrastructureChange}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  الصيانة: {formatMillions(template.maintenanceCostTND, "TND")}{" "}
+                  شهريًا
                 </p>
               </li>
             );

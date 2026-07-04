@@ -1,12 +1,18 @@
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   ActiveProject,
+  CompletedProject,
   GameState,
   Region,
   RegionId,
 } from "@/types/game";
 import { INITIAL_REGIONS } from "@/data/regions";
 import { getProjectTemplate } from "@/data/projects";
+import {
+  MAX_ACTIVE_PROJECTS_PER_REGION,
+  computeMonthlyFinances,
+} from "@/lib/economy";
 
 const INITIAL_GAME_STATE: GameState = {
   currentDate: "2026-01-01",
@@ -27,93 +33,150 @@ interface GameStore {
   gameState: GameState;
   regions: Record<RegionId, Region>;
   activeProjects: readonly ActiveProject[];
+  completedProjects: readonly CompletedProject[];
   selectedRegionId: RegionId | null;
   selectRegion: (id: RegionId | null) => void;
   /**
-   * Starts a project in a region if the budget and hard currency cover it.
-   * Returns whether construction actually started.
+   * Starts a project in a region if funds cover it and the region is below
+   * its active-project limit. Returns whether construction actually started.
    */
   startProject: (projectId: string, regionId: RegionId) => boolean;
-  /** Advances the game by one month and progresses/completes active projects. */
+  /**
+   * Advances the game by one month: applies net monthly finances to the
+   * budget (which may go negative, i.e. national debt), then progresses and
+   * completes active projects.
+   */
   advanceTime: () => void;
 }
 
-export const useGameStore = create<GameStore>()((set, get) => ({
-  gameState: INITIAL_GAME_STATE,
-  regions: INITIAL_REGIONS,
-  activeProjects: [],
-  selectedRegionId: null,
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set, get) => ({
+      gameState: INITIAL_GAME_STATE,
+      regions: INITIAL_REGIONS,
+      activeProjects: [],
+      completedProjects: [],
+      selectedRegionId: null,
 
-  selectRegion: (id) => set({ selectedRegionId: id }),
+      selectRegion: (id) => set({ selectedRegionId: id }),
 
-  startProject: (projectId, regionId) => {
-    const template = getProjectTemplate(projectId);
-    if (!template) {
-      return false;
-    }
-    const { gameState } = get();
-    if (
-      gameState.totalBudget < template.costTND ||
-      gameState.hardCurrency < template.costUSD
-    ) {
-      return false;
-    }
-    set((state) => ({
-      gameState: {
-        ...state.gameState,
-        totalBudget: state.gameState.totalBudget - template.costTND,
-        hardCurrency: state.gameState.hardCurrency - template.costUSD,
-      },
-      activeProjects: [
-        ...state.activeProjects,
-        {
-          instanceId: crypto.randomUUID(),
-          projectId,
-          regionId,
-          monthsRemaining: template.durationMonths,
-        },
-      ],
-    }));
-    return true;
-  },
-
-  advanceTime: () =>
-    set((state) => {
-      const ticked = state.activeProjects.map((project) => ({
-        ...project,
-        monthsRemaining: project.monthsRemaining - 1,
-      }));
-      const completed = ticked.filter((project) => project.monthsRemaining <= 0);
-
-      let regions = state.regions;
-      if (completed.length > 0) {
-        regions = { ...regions };
-        for (const project of completed) {
-          const template = getProjectTemplate(project.projectId);
-          if (!template) {
-            continue;
-          }
-          const region = regions[project.regionId];
-          regions[project.regionId] = {
-            ...region,
-            infrastructureLevel: Math.min(
-              MAX_INFRASTRUCTURE_LEVEL,
-              Math.max(
-                0,
-                region.infrastructureLevel + template.effects.infrastructureChange,
-              ),
-            ),
-          };
+      startProject: (projectId, regionId) => {
+        const template = getProjectTemplate(projectId);
+        if (!template) {
+          return false;
         }
-      }
+        const { gameState, activeProjects } = get();
+        const regionActiveCount = activeProjects.filter(
+          (project) => project.regionId === regionId,
+        ).length;
+        if (regionActiveCount >= MAX_ACTIVE_PROJECTS_PER_REGION) {
+          return false;
+        }
+        if (
+          gameState.totalBudget < template.costTND ||
+          gameState.hardCurrency < template.costUSD
+        ) {
+          return false;
+        }
+        set((state) => ({
+          gameState: {
+            ...state.gameState,
+            totalBudget: state.gameState.totalBudget - template.costTND,
+            hardCurrency: state.gameState.hardCurrency - template.costUSD,
+          },
+          activeProjects: [
+            ...state.activeProjects,
+            {
+              instanceId: crypto.randomUUID(),
+              projectId,
+              regionId,
+              monthsRemaining: template.durationMonths,
+            },
+          ],
+        }));
+        return true;
+      },
 
-      return {
-        gameState: {
-          ...state.gameState,
-          currentDate: addOneMonth(state.gameState.currentDate),
-        },
-        activeProjects: ticked.filter((project) => project.monthsRemaining > 0),
-        regions,
-      };
+      advanceTime: () =>
+        set((state) => {
+          // Finances for the elapsing month, from the pre-tick state: sites
+          // still under construction this month pay upkeep, and only projects
+          // completed in earlier months pay maintenance.
+          const { net } = computeMonthlyFinances(
+            state.regions,
+            state.activeProjects,
+            state.completedProjects,
+          );
+
+          const ticked = state.activeProjects.map((project) => ({
+            ...project,
+            monthsRemaining: project.monthsRemaining - 1,
+          }));
+          const completed = ticked.filter(
+            (project) => project.monthsRemaining <= 0,
+          );
+
+          let regions = state.regions;
+          let completedProjects = state.completedProjects;
+          if (completed.length > 0) {
+            regions = { ...regions };
+            for (const project of completed) {
+              const template = getProjectTemplate(project.projectId);
+              if (!template) {
+                continue;
+              }
+              const region = regions[project.regionId];
+              regions[project.regionId] = {
+                ...region,
+                infrastructureLevel: Math.min(
+                  MAX_INFRASTRUCTURE_LEVEL,
+                  Math.max(
+                    0,
+                    region.infrastructureLevel +
+                      template.effects.infrastructureChange,
+                  ),
+                ),
+              };
+            }
+            completedProjects = [
+              ...completedProjects,
+              ...completed.map(({ instanceId, projectId, regionId }) => ({
+                instanceId,
+                projectId,
+                regionId,
+              })),
+            ];
+          }
+
+          return {
+            gameState: {
+              ...state.gameState,
+              currentDate: addOneMonth(state.gameState.currentDate),
+              totalBudget: state.gameState.totalBudget + net,
+            },
+            activeProjects: ticked.filter(
+              (project) => project.monthsRemaining > 0,
+            ),
+            completedProjects,
+            regions,
+          };
+        }),
     }),
-}));
+    {
+      name: "tunisia-simulator-campaign",
+      storage: createJSONStorage(() => localStorage),
+      version: 1,
+      // Selection is transient UI state; only the campaign itself is saved.
+      partialize: (state) => ({
+        gameState: state.gameState,
+        regions: state.regions,
+        activeProjects: state.activeProjects,
+        completedProjects: state.completedProjects,
+      }),
+      // SSR and the first client render both use the initial state; the saved
+      // campaign is loaded after mount (see StoreHydrator) so the HTML always
+      // matches and React never sees a hydration mismatch.
+      skipHydration: true,
+    },
+  ),
+);
