@@ -53,6 +53,7 @@ export default function TunisiaMap({
 }: TunisiaMapProps) {
   const storeSelectedId = useGameStore((state) => state.selectedRegionId);
   const storeSelectRegion = useGameStore((state) => state.selectRegion);
+  const regions = useGameStore((state) => state.regions);
   const [hoveredId, setHoveredId] = useState<RegionId | null>(null);
 
   const selectedId =
@@ -71,7 +72,7 @@ export default function TunisiaMap({
     <svg
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
       role="group"
-      aria-label="Map of Tunisia's 24 governorates"
+      aria-label="خريطة ولايات تونس الأربع والعشرين"
       className={`touch-manipulation select-none ${className ?? ""}`}
     >
       {shapes.map((shape) => {
@@ -88,7 +89,7 @@ export default function TunisiaMap({
             d={shape.d}
             role="button"
             tabIndex={0}
-            aria-label={`${shape.name} governorate`}
+            aria-label={`ولاية ${regions[shape.id]?.name ?? shape.name}`}
             aria-pressed={isSelected}
             className={`cursor-pointer stroke-slate-900 outline-none transition-[fill] duration-150 ${fill}`}
             onClick={() => toggleRegion(shape.id)}

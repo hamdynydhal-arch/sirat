@@ -1,23 +1,27 @@
-// Fixed locale so server- and client-rendered output always match.
-const numberFormat = new Intl.NumberFormat("en-US");
+// Fixed Arabic (Tunisia) locale so server- and client-rendered output match.
+// ar-TN uses Western (Latin) digits, as is standard in the Maghreb.
+const LOCALE = "ar-TN";
+
+const numberFormat = new Intl.NumberFormat(LOCALE);
 
 export function formatNumber(value: number): string {
   return numberFormat.format(value);
 }
 
-/** Formats an amount given in millions, e.g. 5000 -> "5,000M TND". */
+/** Formats an amount given in millions, e.g. 5000 -> "5.000 مليون دينار". */
 export function formatMillions(value: number, currency: "TND" | "USD"): string {
-  return `${numberFormat.format(value)}M ${currency}`;
+  const unit = currency === "TND" ? "دينار" : "دولار";
+  return `${numberFormat.format(value)} مليون ${unit}`;
 }
 
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
+const dateFormat = new Intl.DateTimeFormat(LOCALE, {
   day: "numeric",
-  month: "short",
+  month: "long",
   year: "numeric",
   timeZone: "UTC",
 });
 
-/** Formats an ISO `YYYY-MM-DD` game date, e.g. "1 Jan 2026". */
+/** Formats an ISO `YYYY-MM-DD` game date, e.g. "1 جانفي 2026". */
 export function formatGameDate(isoDate: string): string {
   return dateFormat.format(new Date(`${isoDate}T00:00:00Z`));
 }

@@ -5,7 +5,8 @@ import { formatNumber } from "@/lib/format";
 
 /**
  * Placeholder detail panel for the selected governorate.
- * Renders as a right-hand sidebar on desktop and a bottom sheet on mobile.
+ * Renders as a bottom sheet on mobile; on desktop it is a static column at
+ * inline-start (the physical right edge in RTL) and slides in from there.
  */
 export default function RegionSidebar() {
   const region = useGameStore((state) =>
@@ -19,18 +20,18 @@ export default function RegionSidebar() {
 
   return (
     <aside
-      aria-label={`${region.name} details`}
-      className="fixed inset-x-0 bottom-0 z-10 max-h-[70dvh] overflow-y-auto rounded-t-2xl border-t border-slate-700 bg-slate-900/95 p-5 shadow-2xl backdrop-blur md:inset-x-auto md:inset-y-0 md:right-0 md:max-h-none md:w-80 md:rounded-none md:border-l md:border-t-0"
+      aria-label={`تفاصيل ولاية ${region.name}`}
+      className="fixed inset-x-0 bottom-0 z-10 max-h-[70dvh] animate-slide-in-up overflow-y-auto rounded-t-2xl border-t border-slate-700 bg-slate-900/95 p-5 shadow-2xl backdrop-blur md:static md:z-auto md:max-h-none md:w-80 md:shrink-0 md:animate-slide-in-right md:rounded-none md:border-e md:border-t-0"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-slate-100">{region.name}</h2>
-          <p className="text-sm text-slate-400">Governorate</p>
+          <p className="text-sm text-slate-400">ولاية</p>
         </div>
         <button
           type="button"
           onClick={() => selectRegion(null)}
-          aria-label="Close panel"
+          aria-label="إغلاق اللوحة"
           className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100"
         >
           <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true">
@@ -41,17 +42,13 @@ export default function RegionSidebar() {
 
       <dl className="mt-6 space-y-5">
         <div>
-          <dt className="text-xs uppercase tracking-wide text-slate-400">
-            Population
-          </dt>
-          <dd className="mt-1 text-lg font-medium text-slate-100">
+          <dt className="text-xs text-slate-400">عدد السكان</dt>
+          <dd className="mt-1 text-lg font-medium tabular-nums text-slate-100">
             {formatNumber(region.population)}
           </dd>
         </div>
         <div>
-          <dt className="text-xs uppercase tracking-wide text-slate-400">
-            Infrastructure level
-          </dt>
+          <dt className="text-xs text-slate-400">مستوى البنية التحتية</dt>
           <dd className="mt-2 flex items-center gap-3">
             <div className="flex flex-1 gap-1" aria-hidden="true">
               {Array.from({ length: 10 }, (_, i) => (
@@ -65,7 +62,7 @@ export default function RegionSidebar() {
                 />
               ))}
             </div>
-            <span className="text-sm font-medium text-slate-100">
+            <span className="text-sm font-medium tabular-nums text-slate-100">
               {region.infrastructureLevel}/10
             </span>
           </dd>
@@ -73,9 +70,9 @@ export default function RegionSidebar() {
       </dl>
 
       <section className="mt-8 rounded-lg border border-dashed border-slate-700 p-4">
-        <h3 className="text-sm font-semibold text-slate-300">Projects</h3>
+        <h3 className="text-sm font-semibold text-slate-300">المشاريع</h3>
         <p className="mt-1 text-sm text-slate-500">
-          No active projects. Project management arrives in Phase 2.
+          لا توجد مشاريع نشطة حاليًا. ستتوفر إدارة المشاريع في المرحلة الثانية.
         </p>
       </section>
     </aside>
