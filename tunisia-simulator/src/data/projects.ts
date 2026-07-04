@@ -38,6 +38,7 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
     durationMonths: 36,
     maintenanceCostTND: 10,
     directIncomeTND: 20,
+    requiresCoastal: true,
     effects: { infrastructureChange: 2 },
   },
   {
@@ -47,6 +48,7 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
     costUSD: 150,
     durationMonths: 20,
     maintenanceCostTND: 7,
+    requiresCoastal: true,
     effects: { infrastructureChange: 1 },
   },
 ];

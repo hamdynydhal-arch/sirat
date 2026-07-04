@@ -68,7 +68,10 @@ export const useGameStore = create<GameStore>()(
         if (!template) {
           return false;
         }
-        const { gameState, activeProjects } = get();
+        const { gameState, activeProjects, regions } = get();
+        if (template.requiresCoastal && !regions[regionId].isCoastal) {
+          return false;
+        }
         const regionActiveCount = activeProjects.filter(
           (project) => project.regionId === regionId,
         ).length;
@@ -179,12 +182,21 @@ export const useGameStore = create<GameStore>()(
     {
       name: "tunisia-simulator-campaign",
       storage: createJSONStorage(() => localStorage),
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
+        const state = persisted as {
+          gameState: GameState;
+          regions: Record<RegionId, Region>;
+        };
         // v1 saves predate the event system; give them an empty event slot.
-        const state = persisted as { gameState: GameState };
         if (version < 2) {
           state.gameState.currentEvent = null;
+        }
+        // v2 saves predate geography; backfill isCoastal from the seed data.
+        if (version < 3) {
+          for (const region of Object.values(state.regions)) {
+            region.isCoastal = INITIAL_REGIONS[region.id].isCoastal;
+          }
         }
         return persisted;
       },

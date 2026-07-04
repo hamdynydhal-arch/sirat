@@ -91,32 +91,51 @@ export default function RegionSidebar() {
             const affordable =
               gameState.totalBudget >= template.costTND &&
               gameState.hardCurrency >= template.costUSD;
+            const coastalBlocked =
+              (template.requiresCoastal ?? false) && !region.isCoastal;
             return (
               <li
                 key={template.id}
                 className="rounded-lg border border-slate-700 bg-slate-800/40 p-3"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <h4 className="text-sm font-semibold text-slate-100">
+                  <h4 className="flex items-center gap-1.5 text-sm font-semibold text-slate-100">
                     {template.name}
+                    {template.requiresCoastal && (
+                      <span
+                        role="img"
+                        aria-label="مشروع ساحلي"
+                        title="مشروع ساحلي"
+                        className="text-xs"
+                      >
+                        🌊
+                      </span>
+                    )}
                   </h4>
                   <button
                     type="button"
                     onClick={() => startProject(template.id, region.id)}
-                    disabled={!affordable || atCapacity}
+                    disabled={coastalBlocked || !affordable || atCapacity}
                     aria-label={`بناء ${template.name}`}
                     title={
-                      atCapacity
-                        ? "الحد الأقصى للمشاريع النشطة ممتلئ"
-                        : affordable
-                          ? undefined
-                          : "الأموال غير كافية"
+                      coastalBlocked
+                        ? "يتطلب ولاية ساحلية"
+                        : atCapacity
+                          ? "الحد الأقصى للمشاريع النشطة ممتلئ"
+                          : affordable
+                            ? undefined
+                            : "الأموال غير كافية"
                     }
                     className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-bold text-white transition-colors hover:bg-emerald-500 active:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500"
                   >
                     بناء
                   </button>
                 </div>
+                {coastalBlocked && (
+                  <p className="mt-2 text-xs font-medium text-sky-400">
+                    🌊 يتطلب ولاية ساحلية
+                  </p>
+                )}
                 <p className="mt-2 text-xs tabular-nums text-slate-400">
                   {formatMillions(template.costTND, "TND")}
                   {" · "}

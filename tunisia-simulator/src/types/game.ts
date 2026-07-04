@@ -70,6 +70,8 @@ export interface Region {
   population: number;
   /** Development level of the governorate, 0 (none) to 10 (fully developed). */
   infrastructureLevel: number;
+  /** Whether the governorate has a Mediterranean coastline. */
+  isCoastal: boolean;
 }
 
 /** Region-level consequences of a completed project. */
@@ -93,6 +95,8 @@ export interface ProjectTemplate {
   maintenanceCostTND: number;
   /** Revenue in million TND per month generated once completed, if any. */
   directIncomeTND?: number;
+  /** Restricts construction to regions with `isCoastal: true`. */
+  requiresCoastal?: boolean;
   effects: ProjectEffects;
 }
 
