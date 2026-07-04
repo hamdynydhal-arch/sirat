@@ -54,7 +54,12 @@ export function computeMonthlyFinances(
 
   let expenses = activeProjects.length * ACTIVE_PROJECT_UPKEEP_TND;
   for (const project of completedProjects) {
-    expenses += getProjectTemplate(project.projectId)?.maintenanceCostTND ?? 0;
+    const template = getProjectTemplate(project.projectId);
+    if (!template) {
+      continue;
+    }
+    expenses += template.maintenanceCostTND;
+    income += template.directIncomeTND ?? 0;
   }
 
   return { income, expenses, net: income - expenses };

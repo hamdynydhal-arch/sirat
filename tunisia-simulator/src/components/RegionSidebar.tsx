@@ -130,6 +130,11 @@ export default function RegionSidebar() {
                   الصيانة: {formatMillions(template.maintenanceCostTND, "TND")}{" "}
                   شهريًا
                 </p>
+                {template.directIncomeTND !== undefined && (
+                  <p className="mt-1 text-xs font-semibold text-emerald-400">
+                    العائد المباشر: +{template.directIncomeTND}م د.ت/شهر
+                  </p>
+                )}
               </li>
             );
           })}

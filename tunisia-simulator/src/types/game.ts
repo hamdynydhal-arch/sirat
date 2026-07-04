@@ -35,6 +35,22 @@ export const REGION_IDS = [
 
 export type RegionId = (typeof REGION_IDS)[number];
 
+/** One-off consequences of a world event. */
+export interface EventEffects {
+  /** Applied to `GameState.totalBudget` the month the event fires, in M TND. */
+  budgetChange: number;
+}
+
+/** A random world event that can fire on a monthly tick. */
+export interface GameEvent {
+  id: string;
+  /** Headline (Arabic). */
+  title: string;
+  /** One-sentence flavor text (Arabic). */
+  description: string;
+  effects: EventEffects;
+}
+
 /** Global state of the running simulation. */
 export interface GameState {
   /** Current in-game date, ISO 8601 (`YYYY-MM-DD`). */
@@ -43,6 +59,8 @@ export interface GameState {
   totalBudget: number;
   /** Hard-currency (foreign exchange) reserves, in million USD. */
   hardCurrency: number;
+  /** Event that fired this month, if any; cleared on the next tick. */
+  currentEvent: GameEvent | null;
 }
 
 /** One of the 24 governorates. */
@@ -73,6 +91,8 @@ export interface ProjectTemplate {
   durationMonths: number;
   /** Recurring upkeep in million TND per month once the project is completed. */
   maintenanceCostTND: number;
+  /** Revenue in million TND per month generated once completed, if any. */
+  directIncomeTND?: number;
   effects: ProjectEffects;
 }
 

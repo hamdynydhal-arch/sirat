@@ -1,3 +1,4 @@
+import EventToast from "@/components/EventToast";
 import GameHud from "@/components/GameHud";
 import RegionSidebar from "@/components/RegionSidebar";
 import TunisiaMap from "@/components/TunisiaMap";
@@ -6,6 +7,7 @@ export default function Home() {
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
       <GameHud />
+      <EventToast />
       {/* overflow-x-clip contains the sidebar's slide-in animation */}
       <div className="flex flex-1 overflow-x-clip">
         {/* DOM-first in an RTL row = pinned to the physical right edge on desktop */}

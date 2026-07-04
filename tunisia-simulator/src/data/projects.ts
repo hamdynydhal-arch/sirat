@@ -27,6 +27,17 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
     costUSD: 90,
     durationMonths: 24,
     maintenanceCostTND: 6,
+    directIncomeTND: 12,
+    effects: { infrastructureChange: 2 },
+  },
+  {
+    id: "commercial-port",
+    name: "ميناء تجاري",
+    costTND: 850,
+    costUSD: 300,
+    durationMonths: 36,
+    maintenanceCostTND: 10,
+    directIncomeTND: 20,
     effects: { infrastructureChange: 2 },
   },
   {

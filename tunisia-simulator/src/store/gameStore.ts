@@ -3,12 +3,14 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   ActiveProject,
   CompletedProject,
+  GameEvent,
   GameState,
   Region,
   RegionId,
 } from "@/types/game";
 import { INITIAL_REGIONS } from "@/data/regions";
 import { getProjectTemplate } from "@/data/projects";
+import { EVENT_CHANCE, GAME_EVENTS } from "@/data/events";
 import {
   MAX_ACTIVE_PROJECTS_PER_REGION,
   computeMonthlyFinances,
@@ -18,6 +20,7 @@ const INITIAL_GAME_STATE: GameState = {
   currentDate: "2026-01-01",
   totalBudget: 5_000,
   hardCurrency: 2_400,
+  currentEvent: null,
 };
 
 const MAX_INFRASTRUCTURE_LEVEL = 10;
@@ -101,12 +104,22 @@ export const useGameStore = create<GameStore>()(
         set((state) => {
           // Finances for the elapsing month, from the pre-tick state: sites
           // still under construction this month pay upkeep, and only projects
-          // completed in earlier months pay maintenance.
+          // completed in earlier months pay maintenance / yield income.
           const { net } = computeMonthlyFinances(
             state.regions,
             state.activeProjects,
             state.completedProjects,
           );
+
+          // World event roll: at most one per month, lasting that month only
+          // (currentEvent is reset on the next tick when no event fires).
+          let currentEvent: GameEvent | null = null;
+          let eventBudgetChange = 0;
+          if (Math.random() < EVENT_CHANCE) {
+            currentEvent =
+              GAME_EVENTS[Math.floor(Math.random() * GAME_EVENTS.length)];
+            eventBudgetChange = currentEvent.effects.budgetChange;
+          }
 
           const ticked = state.activeProjects.map((project) => ({
             ...project,
@@ -152,7 +165,8 @@ export const useGameStore = create<GameStore>()(
             gameState: {
               ...state.gameState,
               currentDate: addOneMonth(state.gameState.currentDate),
-              totalBudget: state.gameState.totalBudget + net,
+              totalBudget: state.gameState.totalBudget + net + eventBudgetChange,
+              currentEvent,
             },
             activeProjects: ticked.filter(
               (project) => project.monthsRemaining > 0,
@@ -165,7 +179,15 @@ export const useGameStore = create<GameStore>()(
     {
       name: "tunisia-simulator-campaign",
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
+      migrate: (persisted, version) => {
+        // v1 saves predate the event system; give them an empty event slot.
+        const state = persisted as { gameState: GameState };
+        if (version < 2) {
+          state.gameState.currentEvent = null;
+        }
+        return persisted;
+      },
       // Selection is transient UI state; only the campaign itself is saved.
       partialize: (state) => ({
         gameState: state.gameState,
