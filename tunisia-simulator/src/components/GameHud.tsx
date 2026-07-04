@@ -3,9 +3,10 @@
 import { useGameStore } from "@/store/gameStore";
 import { formatGameDate, formatMillions } from "@/lib/format";
 
-/** Top bar showing the global game state: date, budget and hard currency. */
+/** Top bar showing the global game state, plus the end-turn action. */
 export default function GameHud() {
   const gameState = useGameStore((state) => state.gameState);
+  const advanceTime = useGameStore((state) => state.advanceTime);
 
   const stats = [
     { label: "التاريخ", value: formatGameDate(gameState.currentDate) },
@@ -27,6 +28,13 @@ export default function GameHud() {
             </span>
           </div>
         ))}
+        <button
+          type="button"
+          onClick={advanceTime}
+          className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm font-bold text-white shadow-lg shadow-emerald-950/50 transition-colors hover:bg-emerald-500 active:bg-emerald-700"
+        >
+          الشهر التالي
+        </button>
       </div>
     </header>
   );

@@ -14,6 +14,14 @@ export function formatMillions(value: number, currency: "TND" | "USD"): string {
   return `${numberFormat.format(value)} مليون ${unit}`;
 }
 
+/** Arabic month-count phrase with correct grammatical number, e.g. "شهران". */
+export function formatMonths(count: number): string {
+  if (count === 1) return "شهر واحد";
+  if (count === 2) return "شهران";
+  if (count >= 3 && count <= 10) return `${count} أشهر`;
+  return `${count} شهرًا`;
+}
+
 const dateFormat = new Intl.DateTimeFormat(LOCALE, {
   day: "numeric",
   month: "long",

@@ -54,11 +54,32 @@ export interface Region {
   infrastructureLevel: number;
 }
 
-/** A buildable development project. */
-export interface Project {
+/** Region-level consequences of a completed project. */
+export interface ProjectEffects {
+  /** Applied to `Region.infrastructureLevel` on completion (clamped to 0–10). */
+  infrastructureChange: number;
+}
+
+/** A buildable development project as offered in the build menu. */
+export interface ProjectTemplate {
   id: string;
-  /** Cost in million TND. */
-  cost: number;
+  /** Display name (Arabic). */
+  name: string;
+  /** Cost in million TND, deducted from `GameState.totalBudget`. */
+  costTND: number;
+  /** Cost in million USD, deducted from `GameState.hardCurrency`. */
+  costUSD: number;
   /** Construction time in in-game months. */
-  duration: number;
+  durationMonths: number;
+  effects: ProjectEffects;
+}
+
+/** A project under construction in a specific region. */
+export interface ActiveProject {
+  /** Unique per construction; several instances of one template may coexist. */
+  instanceId: string;
+  /** References `ProjectTemplate.id`. */
+  projectId: string;
+  regionId: RegionId;
+  monthsRemaining: number;
 }

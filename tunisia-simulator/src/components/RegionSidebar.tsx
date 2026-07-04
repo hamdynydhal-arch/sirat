@@ -1,7 +1,8 @@
 "use client";
 
 import { useGameStore } from "@/store/gameStore";
-import { formatNumber } from "@/lib/format";
+import { PROJECT_TEMPLATES, getProjectTemplate } from "@/data/projects";
+import { formatMillions, formatMonths, formatNumber } from "@/lib/format";
 
 /**
  * Placeholder detail panel for the selected governorate.
@@ -13,10 +14,17 @@ export default function RegionSidebar() {
     state.selectedRegionId ? state.regions[state.selectedRegionId] : null,
   );
   const selectRegion = useGameStore((state) => state.selectRegion);
+  const gameState = useGameStore((state) => state.gameState);
+  const activeProjects = useGameStore((state) => state.activeProjects);
+  const startProject = useGameStore((state) => state.startProject);
 
   if (!region) {
     return null;
   }
+
+  const regionProjects = activeProjects.filter(
+    (project) => project.regionId === region.id,
+  );
 
   return (
     <aside
@@ -69,11 +77,71 @@ export default function RegionSidebar() {
         </div>
       </dl>
 
-      <section className="mt-8 rounded-lg border border-dashed border-slate-700 p-4">
-        <h3 className="text-sm font-semibold text-slate-300">المشاريع</h3>
-        <p className="mt-1 text-sm text-slate-500">
-          لا توجد مشاريع نشطة حاليًا. ستتوفر إدارة المشاريع في المرحلة الثانية.
-        </p>
+      <section className="mt-8">
+        <h3 className="text-sm font-semibold text-slate-300">المشاريع المتاحة</h3>
+        <ul className="mt-3 space-y-3">
+          {PROJECT_TEMPLATES.map((template) => {
+            const affordable =
+              gameState.totalBudget >= template.costTND &&
+              gameState.hardCurrency >= template.costUSD;
+            return (
+              <li
+                key={template.id}
+                className="rounded-lg border border-slate-700 bg-slate-800/40 p-3"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="text-sm font-semibold text-slate-100">
+                    {template.name}
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => startProject(template.id, region.id)}
+                    disabled={!affordable}
+                    aria-label={`بناء ${template.name}`}
+                    title={affordable ? undefined : "الأموال غير كافية"}
+                    className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-bold text-white transition-colors hover:bg-emerald-500 active:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500"
+                  >
+                    بناء
+                  </button>
+                </div>
+                <p className="mt-2 text-xs tabular-nums text-slate-400">
+                  {formatMillions(template.costTND, "TND")}
+                  {" · "}
+                  {formatMillions(template.costUSD, "USD")}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  المدة: {formatMonths(template.durationMonths)} · الأثر: بنية
+                  تحتية +{template.effects.infrastructureChange}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section className="mt-8">
+        <h3 className="text-sm font-semibold text-slate-300">قيد الإنجاز</h3>
+        {regionProjects.length === 0 ? (
+          <p className="mt-2 rounded-lg border border-dashed border-slate-700 p-3 text-sm text-slate-500">
+            لا توجد مشاريع قيد الإنجاز في هذه الولاية.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {regionProjects.map((project) => (
+              <li
+                key={project.instanceId}
+                className="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-800/40 p-3"
+              >
+                <span className="text-sm font-medium text-slate-100">
+                  {getProjectTemplate(project.projectId)?.name ?? project.projectId}
+                </span>
+                <span className="shrink-0 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium tabular-nums text-amber-300">
+                  متبقي {formatMonths(project.monthsRemaining)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </aside>
   );
