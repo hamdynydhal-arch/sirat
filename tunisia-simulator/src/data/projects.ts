@@ -51,6 +51,29 @@ export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
     requiresCoastal: true,
     effects: { infrastructureChange: 1 },
   },
+  {
+    // Historical assets (Dougga, El Jem, Carthage…) restored into
+    // revenue-generating cultural-tourism sites.
+    id: "archaeological-restoration",
+    name: "ترميم المواقع الأثرية",
+    costTND: 120,
+    costUSD: 25,
+    durationMonths: 12,
+    maintenanceCostTND: 3,
+    directIncomeTND: 8,
+    effects: { infrastructureChange: 1 },
+  },
+  {
+    // Goat & sheep breeding program: food security plus steady rural income.
+    id: "livestock-program",
+    name: "تطوير الثروة الحيوانية",
+    costTND: 90,
+    costUSD: 15,
+    durationMonths: 10,
+    maintenanceCostTND: 2,
+    directIncomeTND: 5,
+    effects: { infrastructureChange: 1 },
+  },
 ];
 
 const TEMPLATES_BY_ID = new Map(

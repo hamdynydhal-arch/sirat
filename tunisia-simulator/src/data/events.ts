@@ -26,4 +26,18 @@ export const GAME_EVENTS: readonly GameEvent[] = [
       "مجموعة صناعية عالمية اختارت تونس لإقامة مركز إنتاج جديد بتمويل فوري للخزينة.",
     effects: { budgetChange: 200 },
   },
+  {
+    id: "major-archaeological-discovery",
+    title: "اكتشاف أثري مهم",
+    description:
+      "اكتشاف فسيفساء رومانية نادرة قرب دقة أعاد تونس إلى واجهة الإعلام العالمي وأنعش السياحة الثقافية.",
+    effects: { budgetChange: 120 },
+  },
+  {
+    id: "agricultural-surge",
+    title: "طفرة في الإنتاج الفلاحي",
+    description:
+      "موسم أمطار استثنائي ضاعف إنتاج الحبوب والماشية وقلّص فاتورة واردات الغذاء.",
+    effects: { budgetChange: 90 },
+  },
 ];
