@@ -50,6 +50,8 @@ interface GameStore {
    * completes active projects.
    */
   advanceTime: () => void;
+  /** Wipes the campaign back to the initial state (date, budget, regions, projects). */
+  resetGame: () => void;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -178,15 +180,26 @@ export const useGameStore = create<GameStore>()(
             regions,
           };
         }),
+
+      resetGame: () =>
+        set({
+          gameState: INITIAL_GAME_STATE,
+          regions: INITIAL_REGIONS,
+          activeProjects: [],
+          completedProjects: [],
+          selectedRegionId: null,
+        }),
     }),
     {
       name: "tunisia-simulator-campaign",
       storage: createJSONStorage(() => localStorage),
-      version: 3,
+      version: 4,
       migrate: (persisted, version) => {
         const state = persisted as {
           gameState: GameState;
           regions: Record<RegionId, Region>;
+          activeProjects: ActiveProject[];
+          completedProjects: CompletedProject[];
         };
         // v1 saves predate the event system; give them an empty event slot.
         if (version < 2) {
@@ -197,6 +210,19 @@ export const useGameStore = create<GameStore>()(
           for (const region of Object.values(state.regions)) {
             region.isCoastal = INITIAL_REGIONS[region.id].isCoastal;
           }
+        }
+        // v3 saves may contain coastal-only projects built in landlocked
+        // regions before the constraint existed; demolish them.
+        if (version < 4) {
+          const violates = (project: ActiveProject | CompletedProject) =>
+            Boolean(getProjectTemplate(project.projectId)?.requiresCoastal) &&
+            !state.regions[project.regionId].isCoastal;
+          state.activeProjects = state.activeProjects.filter(
+            (project) => !violates(project),
+          );
+          state.completedProjects = state.completedProjects.filter(
+            (project) => !violates(project),
+          );
         }
         return persisted;
       },

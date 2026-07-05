@@ -1,7 +1,7 @@
 import EventToast from "@/components/EventToast";
 import GameHud from "@/components/GameHud";
+import MapPanel from "@/components/MapPanel";
 import RegionSidebar from "@/components/RegionSidebar";
-import TunisiaMap from "@/components/TunisiaMap";
 
 export default function Home() {
   return (
@@ -12,8 +12,10 @@ export default function Home() {
       <div className="flex flex-1 overflow-x-clip">
         {/* DOM-first in an RTL row = pinned to the physical right edge on desktop */}
         <RegionSidebar />
-        <main className="flex flex-1 items-center justify-center p-4">
-          <TunisiaMap className="h-auto max-h-[82dvh] w-full max-w-md" />
+        {/* relative + z-0 sizes the absolute map fill and keeps Leaflet's
+            internal z-indexes (up to 1000) below the sidebar and toast */}
+        <main className="relative z-0 flex-1">
+          <MapPanel />
         </main>
       </div>
     </div>

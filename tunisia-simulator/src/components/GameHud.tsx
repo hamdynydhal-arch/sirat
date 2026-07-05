@@ -12,6 +12,7 @@ export default function GameHud() {
   const activeProjects = useGameStore((state) => state.activeProjects);
   const completedProjects = useGameStore((state) => state.completedProjects);
   const advanceTime = useGameStore((state) => state.advanceTime);
+  const resetGame = useGameStore((state) => state.resetGame);
 
   const { net } = useMemo(
     () => computeMonthlyFinances(regions, activeProjects, completedProjects),
@@ -59,6 +60,17 @@ export default function GameHud() {
             {formatMillions(gameState.hardCurrency, "USD")}
           </span>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm("هل تريد بدء حملة جديدة؟ سيتم مسح كل التقدم الحالي.")) {
+              resetGame();
+            }
+          }}
+          className="rounded-md border border-red-500/40 px-3 py-1.5 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/10"
+        >
+          بداية جديدة
+        </button>
         <button
           type="button"
           onClick={advanceTime}

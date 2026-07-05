@@ -1,9 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { geoMercator, geoPath } from "d3-geo";
-import type { FeatureCollection, Geometry } from "geojson";
+import { useEffect, useRef, useState } from "react";
+import { GeoJSON, MapContainer, TileLayer } from "react-leaflet";
+import type {
+  GeoJSON as LeafletGeoJSON,
+  LatLngBoundsExpression,
+  Layer,
+  Path,
+  PathOptions,
+} from "leaflet";
+import type { Feature, FeatureCollection, Geometry } from "geojson";
+import "leaflet/dist/leaflet.css";
 import governoratesJson from "@/data/tunisia-governorates.json";
+import { INITIAL_REGIONS } from "@/data/regions";
 import { useGameStore } from "@/store/gameStore";
 import type { RegionId } from "@/types/game";
 
@@ -13,113 +22,146 @@ interface GovernorateProperties {
   iso: string;
 }
 
+type GovernorateFeature = Feature<Geometry, GovernorateProperties>;
+
 const governorates = governoratesJson as unknown as FeatureCollection<
   Geometry,
   GovernorateProperties
 >;
 
-// Tunisia is roughly twice as tall as it is wide under Mercator.
-const MAP_WIDTH = 480;
-const MAP_HEIGHT = 920;
-const MAP_PADDING = 12;
+const TUNISIA_BOUNDS: LatLngBoundsExpression = [
+  [30.23, 7.52],
+  [37.55, 11.6],
+];
 
-// The GeoJSON is static, so project it once at module load rather than per render.
-const projection = geoMercator().fitExtent(
-  [
-    [MAP_PADDING, MAP_PADDING],
-    [MAP_WIDTH - MAP_PADDING, MAP_HEIGHT - MAP_PADDING],
-  ],
-  governorates,
-);
-const pathGenerator = geoPath(projection);
+/** Loose bounds so the player can pan across Algeria and Libya, not the world. */
+const PAN_BOUNDS: LatLngBoundsExpression = [
+  [24, -1],
+  [42, 20],
+];
 
-const shapes = governorates.features.map((feature) => ({
-  id: feature.properties.id,
-  name: feature.properties.name,
-  d: pathGenerator(feature) ?? "",
-}));
+// Transparent fills so the real map (roads, terrain, borders) stays readable.
+const BASE_STYLE: PathOptions = {
+  color: "#94a3b8",
+  weight: 1.2,
+  fillColor: "#475569",
+  fillOpacity: 0.12,
+};
+const HOVER_STYLE: PathOptions = {
+  color: "#fde68a",
+  weight: 2,
+  fillColor: "#f59e0b",
+  fillOpacity: 0.3,
+};
+const SELECTED_STYLE: PathOptions = {
+  color: "#6ee7b7",
+  weight: 2.5,
+  fillColor: "#10b981",
+  fillOpacity: 0.3,
+};
+
+function toggleRegion(id: RegionId) {
+  const { selectedRegionId, selectRegion } = useGameStore.getState();
+  selectRegion(selectedRegionId === id ? null : id);
+}
+
+function GovernorateLayer() {
+  const selectedRegionId = useGameStore((state) => state.selectedRegionId);
+  const [hoveredId, setHoveredId] = useState<RegionId | null>(null);
+  const layerRef = useRef<LeafletGeoJSON | null>(null);
+
+  const styleFor = (id: RegionId): PathOptions =>
+    id === selectedRegionId
+      ? SELECTED_STYLE
+      : id === hoveredId
+        ? HOVER_STYLE
+        : BASE_STYLE;
+
+  // Leaflet layers are imperative: restyle them when hover/selection changes.
+  useEffect(() => {
+    layerRef.current?.eachLayer((layer) => {
+      const path = layer as Path & { feature?: GovernorateFeature };
+      if (path.feature) {
+        path.setStyle(styleFor(path.feature.properties.id));
+      }
+    });
+  });
+
+  const onEachFeature = (feature: GovernorateFeature, layer: Layer) => {
+    const id = feature.properties.id;
+    const arabicName = INITIAL_REGIONS[id]?.name ?? feature.properties.name;
+
+    layer.bindTooltip(arabicName, {
+      sticky: true,
+      direction: "top",
+      className: "region-tooltip",
+    });
+    layer.on({
+      mouseover: () => setHoveredId(id),
+      mouseout: () => setHoveredId((current) => (current === id ? null : current)),
+      click: () => toggleRegion(id),
+    });
+
+    // Keyboard/screen-reader parity with the old SVG map.
+    layer.once("add", () => {
+      const el = (layer as Path).getElement() as SVGElement | undefined;
+      if (!el) {
+        return;
+      }
+      el.setAttribute("role", "button");
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("aria-label", `ولاية ${arabicName}`);
+      el.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleRegion(id);
+        }
+      });
+      el.addEventListener("focus", () => setHoveredId(id));
+      el.addEventListener("blur", () =>
+        setHoveredId((current) => (current === id ? null : current)),
+      );
+    });
+  };
+
+  return (
+    <GeoJSON
+      ref={layerRef}
+      data={governorates}
+      style={(feature) =>
+        styleFor((feature as GovernorateFeature).properties.id)
+      }
+      onEachFeature={onEachFeature}
+    />
+  );
+}
 
 export interface TunisiaMapProps {
-  /** Controlled selection; omit to bind the map to the global game store. */
-  selectedRegionId?: RegionId | null;
-  onRegionSelect?: (id: RegionId | null) => void;
   className?: string;
 }
 
-export default function TunisiaMap({
-  selectedRegionId,
-  onRegionSelect,
-  className,
-}: TunisiaMapProps) {
-  const storeSelectedId = useGameStore((state) => state.selectedRegionId);
-  const storeSelectRegion = useGameStore((state) => state.selectRegion);
-  const regions = useGameStore((state) => state.regions);
-  const [hoveredId, setHoveredId] = useState<RegionId | null>(null);
-
-  const selectedId =
-    selectedRegionId !== undefined ? selectedRegionId : storeSelectedId;
-  const selectRegion = onRegionSelect ?? storeSelectRegion;
-
-  const toggleRegion = (id: RegionId) => {
-    selectRegion(id === selectedId ? null : id);
-  };
-
-  const highlighted = shapes.filter(
-    (shape) => shape.id === hoveredId || shape.id === selectedId,
-  );
-
+/**
+ * Real-world Leaflet map (CARTO Dark Matter tiles: roads, terrain and the
+ * Algerian/Libyan borders) with the 24 governorates overlaid as an
+ * interactive GeoJSON layer. Browser-only — always load via `next/dynamic`
+ * with `ssr: false` (see MapPanel).
+ */
+export default function TunisiaMap({ className }: TunisiaMapProps) {
   return (
-    <svg
-      viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-      role="group"
-      aria-label="خريطة ولايات تونس الأربع والعشرين"
-      className={`touch-manipulation select-none ${className ?? ""}`}
+    <MapContainer
+      bounds={TUNISIA_BOUNDS}
+      maxBounds={PAN_BOUNDS}
+      minZoom={5}
+      maxZoom={14}
+      className={className ?? "h-full w-full"}
+      style={{ background: "#0f172a" }}
     >
-      {shapes.map((shape) => {
-        const isSelected = shape.id === selectedId;
-        const isHovered = shape.id === hoveredId;
-        const fill = isSelected
-          ? "fill-emerald-500/90"
-          : isHovered
-            ? "fill-amber-400/90"
-            : "fill-slate-700 hover:fill-amber-400/90";
-        return (
-          <path
-            key={shape.id}
-            d={shape.d}
-            role="button"
-            tabIndex={0}
-            aria-label={`ولاية ${regions[shape.id]?.name ?? shape.name}`}
-            aria-pressed={isSelected}
-            className={`cursor-pointer stroke-slate-900 outline-none transition-[fill] duration-150 ${fill}`}
-            onClick={() => toggleRegion(shape.id)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                toggleRegion(shape.id);
-              }
-            }}
-            onMouseEnter={() => setHoveredId(shape.id)}
-            onMouseLeave={() =>
-              setHoveredId((current) => (current === shape.id ? null : current))
-            }
-            onFocus={() => setHoveredId(shape.id)}
-            onBlur={() =>
-              setHoveredId((current) => (current === shape.id ? null : current))
-            }
-          />
-        );
-      })}
-      {/* Redraw highlighted borders on top so they aren't hidden by neighbours. */}
-      {highlighted.map((shape) => (
-        <path
-          key={`outline-${shape.id}`}
-          d={shape.d}
-          className={`pointer-events-none fill-none stroke-2 ${
-            shape.id === selectedId ? "stroke-emerald-200" : "stroke-amber-200"
-          }`}
-        />
-      ))}
-    </svg>
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        subdomains="abcd"
+      />
+      <GovernorateLayer />
+    </MapContainer>
   );
 }

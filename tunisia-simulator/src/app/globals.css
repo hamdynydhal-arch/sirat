@@ -53,3 +53,18 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Dark-themed governorate name tooltip on the Leaflet map. */
+.region-tooltip {
+  background: rgb(15 23 42 / 0.95);
+  border: 1px solid rgb(71 85 105);
+  border-radius: 0.375rem;
+  padding: 2px 10px;
+  color: #f1f5f9;
+  font-family: var(--font-sans), sans-serif;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.4);
+}
+.region-tooltip::before {
+  display: none;
+}
